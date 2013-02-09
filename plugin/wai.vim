@@ -19,7 +19,7 @@ if !exists('g:wai_map_keys')
 endif
 if g:wai_map_keys
     execute "autocmd FileType html,xml,mustache" "nnoremap <buffer>" "<Leader>w"  ":call WaiXmlPath()<CR>"
-    execute "autocmd FileType javascript" "nnoremap <buffer>" "<Leader>w"  ":call WaiJsonPath()<CR>"
+    execute "autocmd FileType json" "nnoremap <buffer>" "<Leader>w"  ":call WaiJsonPath()<CR>"
 endif
 
 
