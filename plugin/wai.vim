@@ -19,7 +19,56 @@ if !exists('g:wai_map_keys')
 endif
 if g:wai_map_keys
     execute "autocmd FileType html,xml,mustache" "nnoremap <buffer>" "<Leader>w"  ":call WaiXmlPath()<CR>"
+    execute "autocmd FileType javascript" "nnoremap <buffer>" "<Leader>w"  ":call WaiJsonPath()<CR>"
 endif
+
+
+function! WaiJsonPath()
+    python <<EOF
+def getJsonPath(jsonString):
+    if not jsonString or len(jsonString) == 0:
+        return '[empty]'
+    pos = 0
+    depth = 0
+    last = '__start__'
+    lastIdentifier = ''
+    path = []
+    jsonLength = len(jsonString)
+    while pos < jsonLength:
+        current = jsonString[pos]
+        if current == '"':
+            pos += 1
+            startPos = pos
+            while pos < jsonLength and jsonString[pos] != '"':
+                pos += 1
+            identifier = jsonString[startPos:pos]
+            if jsonString[pos+1] == ':':
+                lastIdentifier = identifier
+                pos += 1
+            pos += 1
+        if current == "{":
+            if lastIdentifier:
+                path.append(lastIdentifier)
+            depth += 1
+            pos += 1
+            last = '{'
+        elif current == '}':
+            if depth == 0:
+                return '[empty]'
+            if len(path) > 1:
+                path.pop()
+            depth -= 1
+            pos += 1
+            last = '}'
+        else:
+            pos += 1
+            last = current
+    return ".".join(path)
+data = '\n'.join(vim.current.buffer[0:int(vim.eval("line('.')"))])
+path = getJsonPath(data)
+vim.command('echo "' + path + '"')
+EOF
+endfunction
 
 "
 " Parse current buffer from [0:line('.')] and echo

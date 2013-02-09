@@ -2,7 +2,9 @@
 wai - where am i - vim plugin
 -----------------------------
 
-A simple plugin to show the current
-location when editing a structured
-file format. Currently only html is
-supported.
+A simple plugin to show the current location when editing a structured file
+format. Currently only xml/html and supported.
+
+When editing mustache or json files I sometimes lose track of the hierarchy.
+This plugin aims at solving this by echo'ing the current 'path' from the
+start of the document to the cursor.
