@@ -1,0 +1,8 @@
+-----------------------------
+wai - where am i - vim plugin
+-----------------------------
+
+A simple plugin to show the current
+location when editing a structured
+file format. Currently only html is
+supported.

@@ -1,0 +1,86 @@
+" wai.vim - wai
+" Author:   Tobias Pflug
+" Version:  0.1
+" License:  see :help license
+
+"
+" load script
+"
+if exists('g:loaded_wai') || &cp
+    finish
+endif
+let g:loaded_wai = 1
+
+"
+" set up mappings
+"
+if !exists('g:wai_map_keys')
+    let g:wai_map_keys = 1
+endif
+if g:wai_map_keys
+    execute "autocmd FileType html,xml,mustache" "nnoremap <buffer>" "<Leader>w"  ":call WaiXmlPath()<CR>"
+endif
+
+"
+" Parse current buffer from [0:line('.')] and echo
+" the path to the element in the current line.
+"
+" If the element in the current line is opened and
+" closed again it is included as last element on
+" the path expression.
+"
+function! WaiXmlPath()
+    python << EOF
+import xml.sax
+
+# handler to track opening/closing tags
+class HtmlContentHandler(xml.sax.ContentHandler):
+    def __init__(self):
+        xml.sax.ContentHandler.__init__(self)
+        self.path = []
+        self.lastDiv = ''
+        self.lastEvent = ''
+        self.skip = False
+    def startElement(self, name, attrs):
+        if not (name in ('div', 'path') and attrs.has_key('class')):
+            self.skip = True
+            return
+        divClass = attrs.getValue('class');
+        self.path.append('.' + divClass)
+        self.lastDiv = '.' + divClass;
+        self.lastEvent = 'open'
+    def endElement(self, name):
+        if self.skip:
+            self.skip = False
+            return
+        self.lastEvent = 'close'
+        self.path.pop()
+    def getPath(self):
+        if (len(self.path) == 0):
+            return '[empty]'
+        p = '>'.join(self.path)
+        if self.lastEvent == 'close':
+            return p + '>' + self.lastDiv;
+        return p;
+
+# error handler to ignore early file end
+class HtmlErrorHandler(xml.sax.ErrorHandler):
+    def __init__(self):
+        pass
+    def error(self, exception):
+        print "error: %s\n" % exception
+    def fatalError(self, exception):
+        if exception.getMessage() == 'no element found':
+            pass
+        else:
+            print "fatal: %s\n" % exception.getMessage()
+
+
+# parse everything up to current line
+data = '\n'.join(vim.current.buffer[0:int(vim.eval("line('.')"))])
+htmlHandler = HtmlContentHandler()
+xml.sax.parseString(data, htmlHandler, HtmlErrorHandler())
+divPath = htmlHandler.getPath()
+vim.command('echo "' + divPath + '"')
+EOF
+endfunction
